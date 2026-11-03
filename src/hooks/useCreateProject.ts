@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { storage, LOCAL_USER_ID } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useProjectStore } from './useProjectStore';
 import { Project } from '@/types/project';
@@ -7,43 +6,26 @@ import { Project } from '@/types/project';
 interface CreateProjectParams {
   name: string;
   description: string;
-  userId: string;
 }
 
 export function useCreateProject() {
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { addProject, updateProject } = useProjectStore();
+  const addProject = useProjectStore((state) => state.addProject);
 
-  const createProject = async ({ name, description, userId }: CreateProjectParams): Promise<Project | null> => {
+  const createProject = ({ name, description }: CreateProjectParams): Project | null => {
     try {
-      setLoading(true);
-      
-      // Create an optimistic project
-      const optimisticProject: Project = {
+      const now = new Date().toISOString();
+      const project = storage.createFolder({
         id: crypto.randomUUID(),
-        name,
-        description,
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+        name: name.trim(),
+        description: description.trim(),
+        user_id: LOCAL_USER_ID,
+        created_at: now,
+        updated_at: now,
+      });
 
-      // Update UI immediately
-      addProject(optimisticProject);
-
-      // Make the actual API call
-      const { data, error } = await supabase
-        .from('folders')
-        .insert([{ name, description, user_id: userId }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Replace the optimistic project with the real data
-      updateProject({ ...data, id: optimisticProject.id });
-      return data;
+      addProject(project);
+      return project;
     } catch (error) {
       toast({
         title: 'Failed to create project',
@@ -51,10 +33,8 @@ export function useCreateProject() {
         variant: 'destructive',
       });
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
-  return { createProject, loading };
+  return { createProject, loading: false };
 }

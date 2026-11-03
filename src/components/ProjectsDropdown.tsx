@@ -15,13 +15,12 @@ import { useProjects } from '@/hooks/useProjects';
 import { useCreateProject } from '@/hooks/useCreateProject';
 
 interface ProjectsDropdownProps {
-  userId: string;
   selectedProject: string | null;
   onSelectProject: (projectId: string) => void;
 }
 
-export function ProjectsDropdown({ userId, selectedProject, onSelectProject }: ProjectsDropdownProps) {
-  const { projects } = useProjects(userId);
+export function ProjectsDropdown({ selectedProject, onSelectProject }: ProjectsDropdownProps) {
+  const { projects } = useProjects();
   const { createProject, loading } = useCreateProject();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [name, setName] = useState('');
@@ -29,9 +28,9 @@ export function ProjectsDropdown({ userId, selectedProject, onSelectProject }: P
 
   const selectedProjectName = projects.find(p => p.id === selectedProject)?.name || 'Select Project';
 
-  const handleCreateProject = async (e: React.FormEvent) => {
+  const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
-    const newProject = await createProject({ name, description, userId });
+    const newProject = createProject({ name, description });
     
     if (newProject) {
       onSelectProject(newProject.id);

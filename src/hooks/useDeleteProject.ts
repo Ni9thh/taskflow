@@ -1,24 +1,14 @@
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { storage } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useProjectStore } from './useProjectStore';
 
 export function useDeleteProject() {
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const removeProject = useProjectStore((state) => state.removeProject);
 
-  const deleteProject = async (projectId: string): Promise<boolean> => {
+  const deleteProject = (projectId: string): boolean => {
     try {
-      setLoading(true);
-      const { error } = await supabase
-        .from('folders')
-        .delete()
-        .eq('id', projectId);
-      
-      if (error) throw error;
-      
-      // Optimistically update the UI
+      storage.deleteFolder(projectId);
       removeProject(projectId);
       return true;
     } catch (error) {
@@ -28,10 +18,8 @@ export function useDeleteProject() {
         variant: 'destructive',
       });
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
-  return { deleteProject, loading };
+  return { deleteProject, loading: false };
 }

@@ -11,30 +11,29 @@ import { useDeleteProject } from '@/hooks/useDeleteProject';
 import { TaskItem } from './TaskItem';
 
 interface TaskListProps {
-  userId: string;
   folderId: string | null;
   onProjectDeleted: () => void;
 }
 
-export function TaskList({ userId, folderId, onProjectDeleted }: TaskListProps) {
+export function TaskList({ folderId, onProjectDeleted }: TaskListProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<string | undefined>();
-  const { tasks, createTask, deleteTask, toggleTaskCompletion } = useTasks(userId, folderId);
+  const { tasks, createTask, deleteTask, toggleTaskCompletion } = useTasks(folderId);
   const { deleteProject, loading: deleteLoading } = useDeleteProject();
 
-  const handleCreateTask = async (e: React.FormEvent) => {
+  const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!folderId) return;
 
     try {
-      await createTask(newTaskTitle, newTaskDescription, selectedParentId);
+      createTask(newTaskTitle, newTaskDescription, selectedParentId);
       setNewTaskTitle('');
       setNewTaskDescription('');
       setIsDialogOpen(false);
       setSelectedParentId(undefined);
-    } catch (error) {
+    } catch {
       // Error is handled in the hook
     }
   };
@@ -44,9 +43,9 @@ export function TaskList({ userId, folderId, onProjectDeleted }: TaskListProps) 
     setIsDialogOpen(true);
   };
 
-  const handleDeleteProject = async () => {
+  const handleDeleteProject = () => {
     if (!folderId) return;
-    const success = await deleteProject(folderId);
+    const success = deleteProject(folderId);
     if (success) {
       onProjectDeleted();
     }
@@ -95,7 +94,7 @@ export function TaskList({ userId, folderId, onProjectDeleted }: TaskListProps) 
           <Button
             variant="outline"
             size="sm"
-            className="absolute bottom-4 right-4 bg-white hover:bg-zinc-100 text-zinc-900 dark:bg-zinc-900 dark:text-white dark:hover:bg-zinc-800 border-none font-mono"
+            className="absolute bottom-4 left-4 bg-white hover:bg-zinc-100 text-zinc-900 dark:bg-zinc-900 dark:text-white dark:hover:bg-zinc-800 border-none font-mono"
           >
             <Trash2Icon className="h-4 w-4 mr-2" />
             Delete Project
